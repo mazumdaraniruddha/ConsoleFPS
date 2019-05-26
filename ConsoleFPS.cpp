@@ -1,6 +1,9 @@
 #include <iostream>
 #include <Windows.h>
 #include <chrono>
+#include <vector>
+#include <algorithm>
+#include <cstdio>
 
 using namespace std;
 
@@ -12,7 +15,7 @@ float fPlayerY = 8.0f;
 float fPlayerAngle = 0.0f;
 
 int mMapWidth = 16;
-int mMapheight = 16;
+int mMapHeight = 16;
 
 float fFOV = 3.14159 / 4.0;
 float fDepth = 16.0f;
@@ -91,6 +94,7 @@ int main() {
 			
 			float fDistanceToWall = 0;
 			bool bHitWall = false;
+			bool bBoundary = false;
 
 			// Unit vector for ray in Player space
 			float fEyeX = sinf(fRayAngle);
@@ -103,12 +107,38 @@ int main() {
 				int mTestY = (int)(fPlayerY + fEyeY * fDistanceToWall);
 
 				// Test if ray is out of bounds?
-				if (mTestX < 0 || mTestX >= mMapWidth || mTestY < 0 || mTestY >= mMapheight) {
+				if (mTestX < 0 || mTestX >= mMapWidth || mTestY < 0 || mTestY >= mMapHeight) {
 					bHitWall = true;
 					fDistanceToWall = fDepth;
 				} else {
 					if (map[mTestY * mMapWidth + mTestX] == '#') {
 						bHitWall = true;
+						// Distance and dot product of the 2 vectors
+						vector<pair<float, float>> p;
+						for (int tx = 0; tx < 3; tx++) {
+							for (int ty = 0; ty < 3; ty++) {
+								float vy = (float)mTestY + ty - fPlayerY;
+								float vx = (float)mTestX + tx - fPlayerX;
+								float d = sqrt(vx*vx + vy*vy);
+								float dotProduct = (fEyeX * vx / d) + (fEyeY * vy / d);
+								p.push_back(make_pair(d, dotProduct));
+							}
+						}
+						sort(p.begin(), p.end(), 
+							[](const pair<float, float> &left, const pair<float, float> &right) {
+							return left.first < right.first;
+						});
+
+						float fBound = 0.01;
+						if (acos(p.at(0).second) < fBound) {
+							bBoundary = true;
+						}
+						if (acos(p.at(1).second) < fBound) {
+							bBoundary = true;
+						}
+						if (acos(p.at(2).second) < fBound) {
+							bBoundary = true;
+						}
 					}
 				}
 			}
@@ -128,6 +158,9 @@ int main() {
 			} else if (fDistanceToWall <= fDepth) {
 				sShade = 0x2591;
 			} else {
+				sShade = ' ';
+			}
+			if (bBoundary) {
 				sShade = ' ';
 			}
 
@@ -158,6 +191,18 @@ int main() {
 				}
 			}
 		}
+
+		// Display stats
+		swprintf_s(screen, 40, L"X=%3.2f, Y=%3.2f, A=%3.2f, FPS=%3.2f", fPlayerX, fPlayerY, fPlayerAngle, 1/ fElapsedTime);
+
+		// Minimap
+		for (int x = 0; x < mMapWidth; x++) {
+			for (int y = 0; y < mMapHeight; y++) {
+				screen[(y + 1) * mScreenWidth + x] = map[y * mMapWidth + x];
+			}
+		}
+		// Draw player in minimap
+		screen[((int)fPlayerY + 1) * mScreenWidth + (int)fPlayerX] = '*';
 
 		screen[mScreenWidth * mScreenHeight - 1] = '\0';
 		WriteConsoleOutputCharacter(hConsole, screen, mScreenWidth * mScreenHeight, { 0, 0 }, &dwBytesWritten);
