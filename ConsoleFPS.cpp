@@ -45,8 +45,10 @@ int main() {
 	auto tp1 = chrono::system_clock::now();
 	auto tp2 = chrono::system_clock::now();
 
+	bool bPlayerWantsToExit = false;
+
 	// Game Loop
-	while (1) {
+	while (!bPlayerWantsToExit) {
 		// Calculate the elapsed time
 		tp2 = chrono::system_clock::now();
 		chrono::duration<float> elaspedTime = tp2 - tp1;
@@ -67,6 +69,9 @@ int main() {
 		if (GetAsyncKeyState((unsigned short) 'S') & 0x8000) {
 			fPlayerX -= sinf(fPlayerAngle) * 5.0f * fElapsedTime;
 			fPlayerY -= cosf(fPlayerAngle) * 5.0f * fElapsedTime;
+		}
+		if (GetAsyncKeyState((unsigned short) ' ') & 0x8000) {
+			bPlayerWantsToExit = true;
 		}
 
 		// Traverse all the x lines/rays (player's horizontal rays/each columns going out to the world)
