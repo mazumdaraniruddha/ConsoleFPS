@@ -65,10 +65,20 @@ int main() {
 		if (GetAsyncKeyState((unsigned short) 'W') & 0x8000) {
 			fPlayerX += sinf(fPlayerAngle) * 5.0f * fElapsedTime;
 			fPlayerY += cosf(fPlayerAngle) * 5.0f * fElapsedTime;
+			// Detect collision with wall
+			if (map[(int) fPlayerY * mMapWidth + (int) fPlayerX] == '#') {
+				fPlayerX -= sinf(fPlayerAngle) * 5.0f * fElapsedTime;
+				fPlayerY -= cosf(fPlayerAngle) * 5.0f * fElapsedTime;
+			}
 		}
 		if (GetAsyncKeyState((unsigned short) 'S') & 0x8000) {
 			fPlayerX -= sinf(fPlayerAngle) * 5.0f * fElapsedTime;
 			fPlayerY -= cosf(fPlayerAngle) * 5.0f * fElapsedTime;
+			// Detect collision with wall
+			if (map[(int)fPlayerY * mMapWidth + (int)fPlayerX] == '#') {
+				fPlayerX += sinf(fPlayerAngle) * 5.0f * fElapsedTime;
+				fPlayerY += cosf(fPlayerAngle) * 5.0f * fElapsedTime;
+			}
 		}
 		if (GetAsyncKeyState((unsigned short) ' ') & 0x8000) {
 			bPlayerWantsToExit = true;
